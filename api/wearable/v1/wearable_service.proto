@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package wearable.v1;
+
+option go_package = "github.com/hypergadam/grpc-streaming/pkg/api/wearable/v1;wearablepb";
+
+import "google/api/annotations.proto";
+
+service WearableService {
+    // ─────────────────────────────────────────────────────
+    // TYPE 1: UNARY
+    // One request → One response. Classic HTTP-style call.
+    // Use case: fetch static device info once.
+    // ─────────────────────────────────────────────────────
+    rpc GetDeviceInfo(GetDeviceInfoRequest) returns (GetDeviceInfoResponse) {
+        option (google.api.http) = {
+            get: "/v1/wearable/{uuid}/info"
+        };
+    };
+
+    // ─────────────────────────────────────────────────────
+    // TYPE 2: SERVER STREAMING
+    // One request → stream of responses.
+    // Use case: client subscribes to live heart rate feed.
+    //           Server pushes a reading every second.
+    // ─────────────────────────────────────────────────────
+    rpc BeatsPerMinute(BeatsPerMinuteRequest) returns (stream BeatsPerMinuteResponse) {
+        option (google.api.http) = {
+            get: "/v1/wearable/{uuid}/beats-per-minute"
+        };
+    };
+
+    // ─────────────────────────────────────────────────────
+    // TYPE 3: CLIENT STREAMING
+    // Stream of requests → One response.
+    // Use case: wearable uploads a batch of health data
+    //           collected offline. Server processes all of
+    //           it and returns a single summary at the end.
+    // ─────────────────────────────────────────────────────
+    rpc UploadHealthData(stream HealthDataPoint) returns (HealthDataSummary) {};
+
+    // ─────────────────────────────────────────────────────
+    // TYPE 4: BIDIRECTIONAL STREAMING
+    // Stream of requests ↔ Stream of responses.
+    // Use case: live interactive session. Client sends
+    //           commands (START/PAUSE/STOP), server streams
+    //           real-time readings back while active.
+    // ─────────────────────────────────────────────────────
+    rpc LiveMonitor(stream LiveMonitorRequest) returns (stream LiveMonitorResponse) {};
+}
+
+// ─── UNARY messages ──────────────────────────────────────
+
+message GetDeviceInfoRequest {
+    string uuid = 1;
+}
+
+message GetDeviceInfoResponse {
+    string uuid               = 1;
+    string name               = 2;
+    uint32 battery_percentage = 3;
+    string firmware_version   = 4;
+}
+
+// ─── SERVER STREAMING messages ───────────────────────────
+
+message BeatsPerMinuteRequest {
+    string uuid = 1;
+}
+
+message BeatsPerMinuteResponse {
+    uint32 value  = 1;
+    uint32 minute = 2;
+}
+
+// ─── CLIENT STREAMING messages ───────────────────────────
+
+message HealthDataPoint {
+    string uuid      = 1;
+    uint32 bpm       = 2;
+    int64  timestamp = 3;
+}
+
+message HealthDataSummary {
+    uint32 total_points = 1;
+    uint32 avg_bpm      = 2;
+    uint32 min_bpm      = 3;
+    uint32 max_bpm      = 4;
+}
+
+// ─── BIDIRECTIONAL STREAMING messages ────────────────────
+
+message LiveMonitorRequest {
+    enum Command {
+        START = 0;
+        PAUSE = 1;
+        STOP  = 2;
+    }
+    Command command = 1;
+}
+
+message LiveMonitorResponse {
+    string status  = 1;
+    uint32 bpm     = 2;
+    string message = 3;
+}
