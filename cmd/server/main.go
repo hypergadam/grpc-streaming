@@ -53,12 +53,14 @@ func main() {
 
 	// Run HTTP gateway in foreground.
 	go func() {
-		log.Println("Starting HTTP gateway on port 8080...")
-		if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Println("Starting HTTP gateway on port 8092...")
+		if err := http.ListenAndServe(":8092", mux); err != nil {
 			log.Fatalf("failed to serve: %v", err.Error())
 		}
 	}()
 
+	// Block forever.
+	select {}
 }
 
 // NOTE:  ▎ grpc.NewServer() creates the gRPC server but doesn't start it — Serve(lis) starts it. RegisterWearableServiceServer wires your wearableServer struct to handle incoming RPCs.

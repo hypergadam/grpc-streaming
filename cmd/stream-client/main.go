@@ -16,7 +16,7 @@ func main() {
 // ▎ Plain HTTP GET. The gateway receives this, translates it to a gRPC GetDeviceInfo call with uuid="device-abc-123" (extracted from the URL path), gets the response, and writes it back as
 // JSON. Zero gRPC knowledge required on the HTTP side.
 func httpUnaryDemo() {
-	resp, err := http.Get("http://localhost:8080/v1/wearable/device-abc-123/info")
+	resp, err := http.Get("http://localhost:8092/v1/wearable/device-abc-123/info")
 	if err != nil {
 		log.Fatalf("failed to get device info: %v", err.Error())
 	}
@@ -35,7 +35,7 @@ func httpUnaryDemo() {
 //   line by line. When you break out of the loop and resp.Body.Close() runs via defer, the HTTP connection closes, the gateway cancels the gRPC stream, and the server's stream.Context().Done()
 //    fires — the goroutine exits cleanly. This is the full cancellation chain.  
 func httpServerStreamingDemo() {
-	resp, err := http.Get("http://localhost:8080/v1/wearable/device-abc-123/beats-per-minute")
+	resp, err := http.Get("http://localhost:8092/v1/wearable/device-abc-123/beats-per-minute")
 	if err != nil {
 		log.Fatalf("failed to get beats per minute: %v", err.Error())
 	}
